@@ -9,13 +9,19 @@
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
+const int D1_LED1 = 5;
+const int D2_LED2 = 4;
+
 // Déclaration des variables globales
 int ClientAlive=0;
-int value1=0;
-int value2=0;
 
 // Déclaration des variables reçus du serveur
-float ConsoInstVA = 0;
+bool ServerAlive=0;
+int LDRValue = 0;
+int ConsoInstVA = 0;
+int maxConsoInstVA = 0;
+int WhPer15Minute = 0;
+int WhPerHour = 0;
 
 Scheduler     userScheduler; // to control your personal task
 painlessMesh  mesh;
@@ -25,8 +31,21 @@ void receivedCallback( uint32_t from, String &msg );
 
 size_t logServerId = 0;
 
+// LED blinking function
+void DigitalBlink(int GPIO){
+  if (digitalRead(GPIO)==1) {      
+  digitalWrite(GPIO,0);
+  }
+  else  {
+  digitalWrite(GPIO,1); 
+  }    
+}
+
 // Send message to the logServer every 10 seconds 
-Task myLoggingTask(10000, TASK_FOREVER, []() {
+Task myLoggingTask(2000, TASK_FOREVER, []() {
+
+//DigitalBlink(LED_BUILTIN);
+      
 #if ARDUINOJSON_VERSION_MAJOR==6
         DynamicJsonDocument jsonBuffer(1024);
         JsonObject msg = jsonBuffer.to<JsonObject>();
@@ -38,16 +57,6 @@ Task myLoggingTask(10000, TASK_FOREVER, []() {
     ClientAlive = not ClientAlive;
     msg["ClientAlive"] = ClientAlive;
     msg["nodeId"] = mesh.getNodeId();
-//    msg["value1"] = random(0, 10000);
-//    msg["value2"] = random(0, 10000);
-//    msg["value3"] = random(0, 10000);
-//    msg["value4"] = random(0, 10000);
-//    msg["value5"] = random(0, 10000);
-//    msg["value6"] = random(0, 10000);
-//    msg["value7"] = random(0, 10000);
-//    msg["value8"] = random(0, 10000);
-//    msg["value9"] = random(0, 10000);
-//    msg["value10"] = random(0, 10000);
     
     String str;
 #if ARDUINOJSON_VERSION_MAJOR==6
@@ -71,16 +80,27 @@ Task myLoggingTask(10000, TASK_FOREVER, []() {
 
 void setup() {
   Serial.begin(115200);
-    
-  //mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
-  mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
+  
+  pinMode(LED_BUILTIN, OUTPUT);     // Initialize GPIO2 pin as an output
+  pinMode(D1_LED1, OUTPUT);    
+  pinMode(D2_LED2, OUTPUT); 
+  
+      
+  mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
+  // mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
 
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, 6 );
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, 11 ); // dernier chiffre est le canal wifi
   mesh.onReceive(&receivedCallback);
 
   // Add the task to the your scheduler
   userScheduler.addTask(myLoggingTask);
   myLoggingTask.enable();
+
+  // Est censé augmenter la puissance... sans vraiment d'effet
+  system_phy_set_max_tpw(82);
+  WiFi.setOutputPower(20.5); // this sets wifi to highest power
+  
+
 }
 
 void loop() {
@@ -88,8 +108,11 @@ void loop() {
   mesh.update();
 }
 
-void receivedCallback( uint32_t from, String &msg ) {
+void receivedCallback( uint32_t from, String &msg ) {  
   Serial.printf("logClient: Received from %u msg=%s\n", from, msg.c_str());
+  
+  // Clignotement à chaque réception
+  DigitalBlink(LED_BUILTIN);
 
   // Saving logServer
 #if ARDUINOJSON_VERSION_MAJOR==6
@@ -109,13 +132,19 @@ void receivedCallback( uint32_t from, String &msg ) {
   if (root.containsKey("topic")) {
       if (String("logServer").equals(root["topic"].as<String>())) {
           // check for on: true or false
-          value1 = root["value1"];
-          ConsoInstVA = root["ConsoInstVA"];
+          ServerAlive = root["ServerAlive"];
           logServerId = root["nodeId"];
-          Serial.printf("logServer detected!!!\n");
-          Serial.println("value1=" + String(value1));
-          Serial.println("ConsoInstVA=" + String(ConsoInstVA));
+          LDRValue = root["LDRValue"];
+          ConsoInstVA = root["ConsoInstVA"];
+          maxConsoInstVA = root["maxConsoInstVA"];
+          WhPer15Minute = root["WhPer15Minute"];
+          WhPerHour = root["WhPerHour"];
+          
+          // Serial.printf("logServer detected!!!\n");
+          // Serial.println("value1=" + String(value1));
+          // Serial.println("ConsoInstVA=" + String(ConsoInstVA));
       }
-      Serial.printf("Handled from %u msg=%s\n", from, msg.c_str());
+      Serial.printf("Handled from %u msg=%s\n", from, msg.c_str());       
+      
   }
 }
