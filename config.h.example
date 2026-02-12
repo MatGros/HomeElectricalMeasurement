@@ -1,0 +1,95 @@
+// config.h.example - Configuration Template
+// 
+// INSTRUCTIONS:
+// 1. Copy this file to 'config.h' in the same directory as your .ino file
+// 2. Fill in your actual credentials in config.h
+// 3. NEVER commit config.h to version control (it's in .gitignore)
+//
+// Example: cp config.h.example config.h
+//
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// ============================================
+// Mesh Network Configuration
+// ============================================
+// The mesh network allows ESP8266 nodes to communicate with each other
+// All nodes must use the same MESH_PREFIX and MESH_PASSWORD
+
+#define MESH_PREFIX     "YourMeshNetworkName"    // Change this to a unique name
+#define MESH_PASSWORD   "YourSecurePassword123"  // Use a strong password (8+ characters)
+#define MESH_PORT       5555                     // Default mesh port (usually no need to change)
+
+// ============================================
+// WiFi Station Configuration
+// ============================================
+// Required ONLY for HEM_Server_v0.3 (MQTT bridge)
+// This connects the server to your home WiFi network
+
+#define STATION_SSID     "YourWiFiNetworkName"   // Your WiFi SSID
+#define STATION_PASSWORD "YourWiFiPassword"      // Your WiFi password
+
+// ============================================
+// MQTT Broker Configuration
+// ============================================
+// Required ONLY for HEM_Server_v0.3 (MQTT bridge)
+// Configure your MQTT broker details
+
+// MQTT Broker IP Address (e.g., Raspberry Pi running Mosquitto)
+#define MQTT_BROKER_IP_1   192    // First octet
+#define MQTT_BROKER_IP_2   168    // Second octet
+#define MQTT_BROKER_IP_3   1      // Third octet
+#define MQTT_BROKER_IP_4   42     // Fourth octet
+// Complete IP: 192.168.1.42
+
+// MQTT Credentials
+#define MQTT_USER        "your_mqtt_username"    // MQTT broker username
+#define MQTT_PASSWORD    "YourMQTTPassword123"   // MQTT broker password
+#define MQTT_PORT        1883                     // Default MQTT port (1883 for non-TLS)
+
+// MQTT Client ID (optional - leave as default or customize)
+#define MQTT_CLIENT_ID   "HEM_Gateway"           // Unique client identifier
+
+// ============================================
+// MQTT Topics Configuration (Optional)
+// ============================================
+// Customize your MQTT topics if needed
+#define MQTT_TOPIC_PREFIX "linky/"               // Prefix for all topics
+#define MQTT_TOPIC_ALIVE "linky/ServerAlive"
+#define MQTT_TOPIC_LDR "linky/LDR"
+#define MQTT_TOPIC_INST_VA "linky/ConsoInstVA"
+#define MQTT_TOPIC_MAX_VA "linky/maxConsoInstVA"
+#define MQTT_TOPIC_15MIN "linky/WhPer15Minute"
+#define MQTT_TOPIC_HOUR "linky/WhPerHour"
+
+// ============================================
+// Hardware Configuration (Optional)
+// ============================================
+// Witty Cloud / ESP8266 Pin Configuration
+// Uncomment and modify if your hardware differs
+
+/*
+#define LDR_PIN    A0      // Light Dependent Resistor analog pin
+#define RED_PIN    15      // Red LED pin
+#define GREEN_PIN  12      // Green LED pin
+#define BLUE_PIN   13      // Blue LED pin
+#define BUTTON_PIN 4       // Button pin
+*/
+
+// ============================================
+// Advanced Settings (Optional)
+// ============================================
+
+// WiFi Power Settings
+// #define WIFI_TX_POWER  20.5f  // WiFi transmit power (0-20.5 dBm)
+
+// Mesh Network Channel
+// #define MESH_CHANNEL   11     // WiFi channel for mesh (1-13)
+
+// Task Intervals (in milliseconds)
+// #define PULSE_TASK_INTERVAL    10        // LDR polling interval
+// #define LOG_TASK_INTERVAL      10000     // Status broadcast interval
+// #define CALC_TASK_INTERVAL     900000    // Calculation task (15 min)
+
+#endif // CONFIG_H
